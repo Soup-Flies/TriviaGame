@@ -1,0 +1,19 @@
+.answers {
+	margin-top: 3%;
+	margin-bottom: 3%;
+}
+
+#question {
+	border-radius: 15px;
+	background: #999;
+	opacity: .8;
+	height: 150px;
+	margin-top: 8%;
+	margin-bottom: 3%;
+}
+
+#timer {
+	background: blue;
+	height: 15px;
+	border-radius: 30px;
+}
