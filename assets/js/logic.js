@@ -1,53 +1,53 @@
 var Questions = {
 
 	q1: {
-		question: "How many yada",
-		correct: "1correct answer = here",
-		wrong1: "1wrong answer = here",
-		wrong2: "2wrong answer = here",
-		wrong3: "3wrong answer = here"
+		question: "According to Greek mythology, who was the goddess of beauty?",
+		correct: "Aphrodite",
+		wrong1: "Sisyphus",
+		wrong2: "Hera",
+		wrong3: "Eris"
 	},
 	q2: {
-		question: "How many blada",
-		correct: "2correct answer = here",
-		wrong1: "4wrong answer = here",
-		wrong2: "5wrong answer = here",
-		wrong3: "6wrong answer = here"
+		question: "What is the name for the Greek goddess of victory?",
+		correct: "Nike",
+		wrong1: "Hebe",
+		wrong2: "Rhea",
+		wrong3: "Artemis"
 	},
 	q3: {
-		question: "How many hippos",
-		correct: "3correct answer = here",
-		wrong1: "7wrong answer = here",
-		wrong2: "8wrong answer = here",
-		wrong3: "9wrong answer = here"
+		question: "According to Greek mythology which Gorgon had snakes for hair and could turn onlookers into stone?",
+		correct: "Medusa",
+		wrong1: "Stheno",
+		wrong2: "Euryalle",
+		wrong3: "Scylla"
 	},
 	q4: {
-		question: "How many trees",
-		correct: "4correct answer = here",
-		wrong1: "10wrong answer = here",
-		wrong2: "11wrong answer = here",
-		wrong3: "12wrong answer = here"
+		question: "Poseidon is the god of the sea and...?",
+		correct: "Earthquakes",
+		wrong1: "Rain",
+		wrong2: "Fish",
+		wrong3: "Sand"
 	},
 	q5: {
-		question: "How many elves",
-		correct: "5correct answer = here",
-		wrong1: "13wrong answer = here",
-		wrong2: "14wrong answer = here",
-		wrong3: "15wrong answer = here"
+		question: "Hades is best known for kidnapping which minor Goddess?",
+		correct: "Persephony",
+		wrong1: "Hacate",
+		wrong2: "Isis",
+		wrong3: "Demeter"
 	},
 	q6: {
-		question: "How many dwarves",
-		correct: "6correct answer = here",
-		wrong1: "16wrong answer = here",
-		wrong2: "17wrong answer = here",
-		wrong3: "18wrong answer = here"
+		question: "Who is Athena's mother in most Mythology?",
+		correct: "Nobody she only has a father",
+		wrong1: "Aphrodite",
+		wrong2: "Hera",
+		wrong3: "Metis"
 	},
 	q7: {
-		question: "How many pickles",
-		correct: "7correct answer = here",
-		wrong1: "19wrong answer = here",
-		wrong2: "20wrong answer = here",
-		wrong3: "21wrong answer = here"
+		question: "In one Myth, the God Apollo chases after what nymph?",
+		correct: "Daphne",
+		wrong1: "Juniper",
+		wrong2: "Miranda",
+		wrong3: "Artemis"
 	}
 };
 
@@ -106,8 +106,8 @@ function randomQuestion() {
 function questionTimer(seconds) {
 	var time = 0;
 	$("#timer").css("width", "");
-	//Input animation for time left here NO CLUE why 1200 is magic number?
-	$("#timer").animate({width: "0"}, seconds * 1200);
+	$("#timer").animate({width: "0"}, seconds * 1100);
+
 	//Maybe because the bar doesn't visually go to 0 and must compensate
 	timer = setInterval(function() {
 		time++;
@@ -132,15 +132,9 @@ function clearTimeInterval(clearTimer) {
 //Take user click action (or lack thereof) and increment appropriate variables
 function correctCheck(correct) {
 	
-	console.log(questionsLeft);
 	$(".guess").prop("disabled", true);
 	$("#timer").stop();
 
-	if (questionsLeft.length == 0) {
-		gameEnd();
-		return;
-	};
-	
 	questionsLeft.pop();
 
 	if (guess == $(currentAnswer).attr("id")) {
@@ -152,41 +146,46 @@ function correctCheck(correct) {
 		timed = false;
 		popupController("timeout");
 
-
 	} else if (!correct) {
 		incorrectGuess++;
 		popupController("incorrect");
-
 	};
-	setTimeout(triviaOperator, 2500);
+
+	if (questionsLeft.length == 0) {
+		setTimeout(gameEnd, 3500);
+		return;
+	};
+
+	setTimeout(triviaOperator, 3500);
 };
 
 //Display popup with different outcomes dependent on calling situation
 function popupController(reason) {
-	$("#main").css("opacity", "0.6");
 	var $popup = $("#popup");
+	var total = correctGuess + incorrectGuess
 		
 		switch (reason) {
 			case "correct":
-				$popup.text("Correct!" + correctGuess);
+				$popup.html("Correct!<br> You've gotten:<br>" + correctGuess + " out of " + total + " questions correct." );
 				break;
 			case "incorrect":
 			// need correct answer
-				$popup.text("Incorrect!" + incorrectGuess);
+				$popup.html("Incorrect! <br> You've missed: " + incorrectGuess + " out of " + total + " answers<br> The correct answer was:<br><strong> " + $(currentAnswer).text()) + "</strong>";
 				break;
 			case "timeout":
 			//need correct answer
-				$popup.text("Timed out" + incorrectGuess);
+				$popup.html("You took too long and the gods became impatient<br> You have now missed " + incorrectGuess + " out of " + total + " answers<br> The correct answer was:<br> <strong>" + $(currentAnswer).text()) + "</strong>";
 				break;
 			case "start":
 				break;
 			case "gameover":
-				$popup.html("Game is over man! You got " + correctGuess + " right out of " + (incorrectGuess + correctGuess) + "\nPlay Again? <br /><button style='color: black' id='replay'>Replay?</button>");
+				$popup.html("Game Over! <br> You got " + correctGuess + " out of " + (incorrectGuess + correctGuess) + " questions correct!" + "<br /><button style='color: black' class='col-xs-8 col-xs-offset-2 btn btn-default' id='replay'>Replay?</button>");
 				break;
 			default:
 				console.log("Unexpected input to popupController");
 		};
 	$popup.css("display", "block");
+	$(".popupcontainer").css("visibility", "visible");
 };
 
 //Stop all running pieces and present gameover screen
@@ -216,15 +215,16 @@ function gameStart() {
 	$("#start").css("display", "none");
 	setTimeout(function() {
 		$("#popup").css("display", "none");
-		$("#main").css("opacity", "1");
-	},2500);
-	setTimeout(triviaOperator, 2500);
+		$(".popupcontainer").css("visibility", "hidden");
+	},1500);
+	setTimeout(triviaOperator, 1500);
 };
 
 //Main function to manage operation of trivia
 function triviaOperator() {
 	$("#main").css("opacity", "1");
 	$("#popup").css("display", "none");
+	$(".popupcontainer").css("visibility", "hidden");
 	$(".guess").prop("disabled", false);
 	questionTimer(8);
 	if (questionsLeft.length > 0) {
