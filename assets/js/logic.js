@@ -49,27 +49,34 @@ var Questions = {
 		wrong2: "20wrong answer = here",
 		wrong3: "21wrong answer = here"
 	}
-}
+};
 
-var alreadyAnswered = Object.keys(Questions);
+var alreadyAnswered;
+var questionsLeft;
 var currentQuestion;
 var currentProps;
 var currentAnswer;
 var guess;
+var timer;
 var timed = false;
+var correctGuess = 0;
+var incorrectGuess = 0;
+var gameOver = false;
+
 
 //Shorthand random number generator for clarity
 function randomNum(num) {
 	return Math.floor(Math.random() * num);
-}
+};
 
-//Produces random property from input object
+//Produces random property from input object without redundancy
 function randomProperty(obj) {
 	var tmpList = alreadyAnswered;
 	var randomPropertyName = tmpList[randomNum(tmpList.length)];
 	alreadyAnswered.splice(alreadyAnswered.indexOf(randomPropertyName), 1);
 	return obj[randomPropertyName];
-}
+};
+
 
 //Updates html to show selected property from randomProperty
 function randomQuestion() {
@@ -88,79 +95,153 @@ function randomQuestion() {
 				//Store variable of correct answer to prevent inspection cheating
 				currentAnswer = ansOrder[currentIndex];
 				console.log(ansOrder[currentIndex]);
-			}
+			};
 			//Iterate through properties of current question and update html with values
 			$(ansOrder[currentIndex]).text(currentQuestion[ currentProps[index] ]);
 			ansOrder.splice(currentIndex, 1);
 		});
+};
 
-		// $("#question").text(currentQuestion.question);
-		// $(ansOrder[currentAns]).text(currentQuestion.correct);
-		ansOrder.pop();
-		// currentAns = randomNum(ansOrder);
-}
-
+//Timeout for guesses
 function questionTimer(seconds) {
-	$("#timer").css("width", "");
-	//Input animation for time left here
-		$("#timer").animate({width: "0"}, seconds * 1200);
-	//
 	var time = 0;
-	var timer = setInterval(function() {
+	$("#timer").css("width", "");
+	//Input animation for time left here NO CLUE why 1200 is magic number?
+	$("#timer").animate({width: "0"}, seconds * 1200);
+	//Maybe because the bar doesn't visually go to 0 and must compensate
+	timer = setInterval(function() {
 		time++;
-		if (time === seconds * 100) {
+		console.log(time);
+		if (time === seconds) {
+			clearTimeInterval(timer);
 			timed = true;
 			correctCheck();
-		}
-	}, 10);
+		};
+	}, 1000);
 
 };
 
+//Clear running timer
+function clearTimeInterval(clearTimer) {
+	clearInterval(clearTimer);
+	time = 0;
+	clearTimer = 0;
+};
+
+
+//Take user click action (or lack thereof) and increment appropriate variables
 function correctCheck(correct) {
-	$(".guess").prop("disabled", true);
-	clearInterval(timer);
-	$("#timer").stop();
-	 
-	if (guess == $(currentAnswer).attr("id")) {
-		console.log("You don't suck!");
-	} else if (timed) {
-		timed = false;
-		console.log("Timed Out");
-		//timed out
-	} else if (!correct) {
-		console.log("Incorrect");
-		//incorrect
-	}
-
-
-}
-
-//Main function to manage operation of trivia -- timer is in seconds for question delay
-function triviaOperator() {
-
-
-	questionTimer(8);
-	randomQuestion();
-	$(".guess").on("click",function() {
-		guess = $(this).attr("id");
-		correctCheck();
-	})
-	// if
-	// setTimeout();
-
 	
-}
+	console.log(questionsLeft);
+	$(".guess").prop("disabled", true);
+	$("#timer").stop();
+
+	if (questionsLeft.length == 0) {
+		gameEnd();
+		return;
+	};
+	
+	questionsLeft.pop();
+
+	if (guess == $(currentAnswer).attr("id")) {
+		correctGuess++;
+		popupController("correct");
+
+	} else if (timed) {
+		incorrectGuess++;
+		timed = false;
+		popupController("timeout");
 
 
+	} else if (!correct) {
+		incorrectGuess++;
+		popupController("incorrect");
 
+	};
+	setTimeout(triviaOperator, 2500);
+};
 
+//Display popup with different outcomes dependent on calling situation
+function popupController(reason) {
+	$("#main").css("opacity", "0.6");
+	var $popup = $("#popup");
+		
+		switch (reason) {
+			case "correct":
+				$popup.text("Correct!" + correctGuess);
+				break;
+			case "incorrect":
+			// need correct answer
+				$popup.text("Incorrect!" + incorrectGuess);
+				break;
+			case "timeout":
+			//need correct answer
+				$popup.text("Timed out" + incorrectGuess);
+				break;
+			case "start":
+				break;
+			case "gameover":
+				$popup.html("Game is over man! You got " + correctGuess + " right out of " + (incorrectGuess + correctGuess) + "\nPlay Again? <br /><button style='color: black' id='replay'>Replay?</button>");
+				break;
+			default:
+				console.log("Unexpected input to popupController");
+		};
+	$popup.css("display", "block");
+};
+
+//Stop all running pieces and present gameover screen
+function gameEnd() {
+	gameOver = true;
+	clearTimeInterval(timer);
+	console.log("Round Over");
+	guess = null;
+	console.log(correctGuess);
+	console.log(incorrectGuess);
+	popupController("gameover");
+	$("#replay").on("click", function() {
+		correctGuess = 0;
+		incorrectGuess = 0;
+		gameOver = false;
+		$("#popup").html("Get ready, here we go!");
+		gameStart();
+	});
+
+};
+
+//Initial popup to play game
+function gameStart() {
+	$("#main").css("display", "block");
+	alreadyAnswered = Object.keys(Questions);
+	questionsLeft = Object.keys(Questions);
+	$("#start").css("display", "none");
+	setTimeout(function() {
+		$("#popup").css("display", "none");
+		$("#main").css("opacity", "1");
+	},2500);
+	setTimeout(triviaOperator, 2500);
+};
+
+//Main function to manage operation of trivia
+function triviaOperator() {
+	$("#main").css("opacity", "1");
+	$("#popup").css("display", "none");
+	$(".guess").prop("disabled", false);
+	questionTimer(8);
+	if (questionsLeft.length > 0) {
+		randomQuestion();
+	};
+};
 
 $(document).ready(function() {
-	$("#start").on("click",function() {
-		$("#start").css("display", "none");
-		setTimeout(triviaOperator, 2500);
-	})
-
-
-})
-
+	$("#start").on("click", gameStart);
+	$(".guess").on("click",function() {
+		if (gameOver) {
+			$(".guess").prop("disabled", true);
+			return;
+		};
+		clearTimeInterval(timer);
+		guess = $(this).attr("id");
+		console.log(guess, "guess");
+		correctCheck();
+	});
+});
